@@ -2,6 +2,7 @@ package com.ly.wifitest;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     private List<ScanResult> scanResultsCopy = new ArrayList<>();
     private WifiAdapter adapter;
+    private WifiManager mWifiManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +45,11 @@ public class MainActivity extends AppCompatActivity {
         scanResultsCopy.addAll(getWifiList(this));
         adapter = new WifiAdapter(this,scanResultsCopy);
         lvList.setAdapter(adapter);
+        // 取得WifiManager对象
+        mWifiManager = (WifiManager) this.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
     }
+
 
     @OnClick({R.id.btn_scan, R.id.btn_stop, R.id.btn_start})
     public void onViewClicked(View view) {
@@ -52,13 +59,38 @@ public class MainActivity extends AppCompatActivity {
                 scanResultsCopy.addAll(getWifiList(this));
                 filterScanResult(scanResultsCopy);
                 adapter.notifyDataSetChanged();
+                checkState(this);
                 break;
             case R.id.btn_stop:
                 setWifiEnabled(false);
                 break;
             case R.id.btn_start:
                 setWifiEnabled(true);
+
+                Intent intent= getIntent();
+                if(intent != null) {
+                    Bundle b = intent.getExtras();
+                    String value=b.getString("arge1"); //从A传过来的参数
+                    Toast.makeText(this,value,Toast.LENGTH_LONG);
+                    b.putString("str1","return string");
+                    setResult(RESULT_OK, intent); //intent为A传来的带有Bundle的intent，当然也可以自己定义新的Bundle
+                }
                 break;
+        }
+    }
+
+    // 检查当前WIFI状态
+    public void checkState(Context context) {
+        if (mWifiManager.getWifiState() == 0) {
+            Toast.makeText(context,"Wifi正在关闭", Toast.LENGTH_SHORT).show();
+        } else if (mWifiManager.getWifiState() == 1) {
+            Toast.makeText(context,"Wifi已经关闭", Toast.LENGTH_SHORT).show();
+        } else if (mWifiManager.getWifiState() == 2) {
+            Toast.makeText(context,"Wifi正在开启", Toast.LENGTH_SHORT).show();
+        } else if (mWifiManager.getWifiState() == 3) {
+            Toast.makeText(context,"Wifi已经开启", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(context,"没有获取到WiFi状态", Toast.LENGTH_SHORT).show();
         }
     }
 
